@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 import json
 from bson import ObjectId, json_util
 from flask import Blueprint, request, jsonify, send_from_directory
@@ -34,11 +34,11 @@ def create_item():
     return_date = request.form.get("return_date")
 
     try:
-        # This handles strings like "2026-04-12T10:00" or "2026-04-12"
-        return_date_obj = datetime.fromisoformat(return_date)
-    except ValueError:
-        return jsonify({"error": "Invalid date format. Use YYYY-MM-DDTHH:MM"}), 400
-    
+        return_date_obj = datetime.fromisoformat(return_date.replace("Z", "+00:00"))
+        if return_date_obj.tzinfo:
+            return_date_obj = return_date_obj.astimezone(timezone.utc).replace(tzinfo=None)
+    except (ValueError, AttributeError):
+        return jsonify({"error": "Invalid date format"}), 400
     #location = request.form.get("location")
     user_id = request.form.get("user_id")  # send from frontend if needed
     required_fields = ["user_id", "title", "description", "category", "condition", "return_date"]

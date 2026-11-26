@@ -1,6 +1,6 @@
 from bson.objectid import ObjectId
 from db import items_col, users_col
-from datetime import datetime
+from datetime import datetime, timezone
 from .Priority_Queue import PriorityQueue
 
 #create method for creating a list of items that are similar/most useful
@@ -123,7 +123,7 @@ class Item:
                     doc["user_id"] = str(doc["user_id"])
                 # Format date for JSON if it exists
                 if "return_date" in doc and hasattr(doc["return_date"], "isoformat"):
-                    doc["return_date"] = doc["return_date"].isoformat()
+                    doc["return_date"] = doc["return_date"].replace(tzinfo=timezone.utc).isoformat()
                 items.append(doc)
                 
             return {"items": items}, 200
@@ -160,7 +160,7 @@ class Item:
                 
                 # Format date to string
                 if "return_date" in doc and hasattr(doc["return_date"], "isoformat"):
-                    doc["return_date"] = doc["return_date"].isoformat()
+                    doc["return_date"] = doc["return_date"].replace(tzinfo=timezone.utc).isoformat()
                     
                 items.append(doc)
                 
@@ -259,7 +259,7 @@ class Item:
 
                 # Format date for JSON
                 if "return_date" in doc:
-                    doc["return_date"] = doc["return_date"].isoformat()
+                    doc["return_date"] = doc["return_date"].replace(tzinfo=timezone.utc).isoformat()
 
             return {"active": active, "needs_rating": needs_rating, "history": history}, 200
         except Exception as e:
