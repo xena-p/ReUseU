@@ -1,7 +1,7 @@
 import { useEffect, useState, FormEvent } from 'react';
-import { User, Item, ItemsResponse, ItemCondition } from '../types';
+import { User, Item, ItemsResponse, ItemCondition, ApiError } from '../types';
 import axiosInstance from '../api/axiosInstance';
-import { AxiosError, ApiError } from 'axios';
+import { AxiosError } from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
 
 const Profile = () => {
