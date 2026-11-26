@@ -42,17 +42,17 @@ class Item:
                 query["user_id"] = {"$ne": ObjectId(user_id)} 
             items = list(items_col.find(query).sort("created_at", -1)) 
             # Convert ObjectId to string and add user info 
-            for item in items: 
-                u_id = item["user_id"] # Get user info for each item 
-                item["_id"] = str(item["_id"]) 
-                item["user_id"] = str(item["user_id"]) 
-                
-                user = users_col.find_one({"_id": u_id}) 
-                if user: 
-                    item["owner"] = { 
-                        "username": user.get("username"), 
-                        "profile": user.get("profile", {}) 
-                    } 
+            owner_ids = list({item["user_id"] for item in items})
+            owners = {
+                u["_id"]: u
+                for u in users_col.find({"_id": {"$in": owner_ids}}, {"username": 1, "profile": 1})
+            }
+            for item in items:
+                owner = owners.get(item["user_id"])
+                item["_id"] = str(item["_id"])
+                item["user_id"] = str(item["user_id"])
+                if owner:
+                    item["owner"] = {"username": owner.get("username"), "profile": owner.get("profile", {})}
             return items, 200 
         except Exception as e: 
             return [], 400
@@ -172,53 +172,47 @@ class Item:
     # search feature:
     @staticmethod
     def get_user_query(user_input, user_id):
-        """ignore case sen + show similar results. 
-        Item priority will be based on the users profile rating and condtion
-        exclude out own user id -> "$ne"""
-
-        #"excellent", "gently used",  "fair", "poor" -> Make sure people only enter valid data terms!!
-        user = users_col.find_one({"_id": ObjectId(user_id)})
-        if not user:
+        """Case-insensitive title search on the requester's campus, ranked by
+        owner rating and item condition, excluding the requester's own items."""
+        requester = users_col.find_one({"_id": ObjectId(user_id)}, {"profile.school": 1})
+        if not requester:
             return []
-        school = user.get("profile", {}).get("school")
-        query={"title": {"$regex":user_input,
-                          "$options": "i"},
-                          "status": "available",
-                          "user_id":{"$ne": ObjectId(user_id)},
-                          "school": school}
+        school = requester.get("profile", {}).get("school")
 
-        items=list(items_col.find(query))
+        query = {
+            "title": {"$regex": user_input, "$options": "i"},
+            "status": "available",
+            "user_id": {"$ne": ObjectId(user_id)},
+            "school": school,
+        }
+        items = list(items_col.find(query))
 
-        "cont: priority queue info"
+        # ONE query for every owner instead of one per item
+        owner_ids = list({item["user_id"] for item in items})
+        owners = {
+            u["_id"]: u
+            for u in users_col.find({"_id": {"$in": owner_ids}}, {"username": 1, "profile": 1})
+        }
 
-        cond_rank={"excellent":3, "gently used":2, "fair":1, "poor":0}
-        pq=PriorityQueue()
+        cond_rank = {"excellent": 3, "gently used": 2, "fair": 1, "poor": 0}
+        pq = PriorityQueue()
 
         for item in items:
-            user = users_col.find_one({"_id": item["user_id"]})
-            if user:
-                ranking_user = user.get("profile", {}).get("rating", 0)
-                # Add owner information to item
-                item["owner"] = {
-                    "username": user.get("username"),
-                    "profile": user.get("profile", {})
-                }
+            owner = owners.get(item["user_id"])
+            if owner:
+                ranking_user = owner.get("profile", {}).get("rating", 0)
+                item["owner"] = {"username": owner.get("username"), "profile": owner.get("profile", {})}
             else:
-                ranking_user=0
-            
-            cond_str = item.get("condition", "fair")
-            curr_cond = cond_rank.get(cond_str, 1)
+                ranking_user = 0
 
-            pq_score=(ranking_user *0.5) + (curr_cond*0.25)
-            
+            curr_cond = cond_rank.get(item.get("condition", "fair"), 1)
+            pq_score = (ranking_user * 0.5) + (curr_cond * 0.25)
+
             item["_id"] = str(item["_id"])
             item["user_id"] = str(item["user_id"])
-
             pq.enqueue(pq_score, item)
 
-        "now dequeue bc it has out itms known/highlighted based on highest priority"
-        
-        curr_items=[]
+        curr_items = []
         while not pq.is_empty():
             curr_items.append(pq.dequeue())
         return curr_items
