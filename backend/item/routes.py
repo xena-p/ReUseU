@@ -60,12 +60,11 @@ def create_item():
         
     }
     if "images" in request.files:
-        files = request.files.getlist("images")
-        for file in files:
-            filename = secure_filename(file.filename)
-            path = os.path.join(UPLOAD_FOLDER, filename)
-            file.save(path)
-            item_data["images"].append(path)  # or URL if you serve static files
+        for file in request.files.getlist("images"):
+            if file and file.filename and allowed_file(file.filename):
+                unique_name = f"{uuid.uuid4().hex}_{secure_filename(file.filename)}"
+                file.save(os.path.join(UPLOAD_FOLDER, unique_name))
+                item_data["images"].append(f"/uploads/{unique_name}")
     
 
     response, status_code = Item.create_item(user_id, item_data)

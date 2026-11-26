@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Item, ItemsResponse, ApiError } from '../types';
 import axiosInstance from '../api/axiosInstance';
 import { AxiosError } from 'axios';
+import { imageUrl } from '../api/images';
 
 const Browse = () => {
   const navigate = useNavigate();
@@ -266,10 +267,18 @@ const Browse = () => {
                     {/* Item Title */}
                     <h3 className="font-bold text-gray-800 text-center mb-4 truncate">{item.title}</h3>
 
-                    {/* Item Icon */}
-                    <div className="w-16 h-16 bg-gradient-to-r from-teal-400 via-purple-400 to-pink-400 rounded-lg flex items-center justify-center mb-4 mx-auto">
-                      <span className="text-4xl">{getItemIcon(item.category)}</span>
-                    </div>
+                    {/* Item Image (falls back to icon) */}
+                    {imageUrl(item.images?.[0]) ? (
+                      <img
+                        src={imageUrl(item.images[0])!}
+                        alt={item.title}
+                        className="w-full h-32 object-cover rounded-lg mb-4"
+                      />
+                    ) : (
+                      <div className="w-16 h-16 bg-gradient-to-r from-teal-400 via-purple-400 to-pink-400 rounded-lg flex items-center justify-center mb-4 mx-auto">
+                        <span className="text-4xl">{getItemIcon(item.category)}</span>
+                      </div>
+                    )}
 
                     {/* Item Details */}
                     <div className="space-y-2">

@@ -3,6 +3,7 @@ import { User, Item, ItemsResponse, ItemCondition, ApiError } from '../types';
 import axiosInstance from '../api/axiosInstance';
 import { AxiosError } from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
+import { imageUrl } from '../api/images';
 
 const Profile = () => {
   const { id } = useParams<{ id: string }>(); // This extracts the 'id' from the URL
@@ -257,9 +258,17 @@ const Profile = () => {
                     className="bg-white rounded-2xl shadow-lg p-6 border-2 border-gray-200 hover:border-purple-300 transition-all"
                   >
                     <div className="flex items-center gap-4 mb-4">
-                      <div className="w-16 h-16 bg-gradient-to-r from-purple-400 to-pink-400 rounded-lg flex items-center justify-center">
-                        <span className="text-2xl">📚</span>
-                      </div>
+                      {imageUrl(item.images?.[0]) ? (
+                        <img
+                          src={imageUrl(item.images[0])!}
+                          alt={item.title}
+                          className="w-16 h-16 object-cover rounded-lg"
+                        />
+                      ) : (
+                        <div className="w-16 h-16 bg-gradient-to-r from-purple-400 to-pink-400 rounded-lg flex items-center justify-center">
+                          <span className="text-2xl">📚</span>
+                        </div>
+                      )}
                       <div className="flex-1">
                         <h3 className="font-bold text-gray-800">{item.title}</h3>
                         <p className="text-sm text-gray-500">{item.category}</p>
