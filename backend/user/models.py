@@ -70,8 +70,9 @@ class User:
                 "school": user_school,
                 "degree": degree,
                 "program": program,
-                "#ofratings": 0,
-                "rating": 0
+                "rating": 0,
+                "rating_sum": 0,
+                "rating_count": 0,
             }
 
             

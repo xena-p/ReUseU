@@ -273,19 +273,31 @@ class Item:
             item = items_col.find_one({"_id": ObjectId(item_id)})
             if not item:
                 return {"error": "Item not found"}, 404
-            
+
             owner_id = item.get("user_id")
 
-            # 2. Update Owner Profile (Increment total stars and count)
+            # 2. Close the loan FIRST — only succeeds once, so a loan can't be rated twice
+            res = items_col.update_one(
+                {"_id": ObjectId(item_id), "status": "unavailable"},
+                {"$set": {"status": "old"}}
+            )
+            if res.modified_count == 0:
+                return {"error": "Loan already closed or not found"}, 400
+
+            # 3. Update owner's running totals and recompute the average in one atomic write
             users_col.update_one(
                 {"_id": ObjectId(owner_id)},
-                {"$inc": {"rating_sum": rating_value, "rating_count": 1}}
-            )
-
-            # 3. Change status to 'old' to hide it from active lists
-            items_col.update_one(
-                {"_id": ObjectId(item_id)},
-                {"$set": {"status": "old"}}
+                [
+                    {"$set": {
+                        "profile.rating_sum":   {"$add": [{"$ifNull": ["$profile.rating_sum", 0]}, rating_value]},
+                        "profile.rating_count": {"$add": [{"$ifNull": ["$profile.rating_count", 0]}, 1]},
+                    }},
+                    {"$set": {
+                        "profile.rating": {"$round": [
+                            {"$divide": ["$profile.rating_sum", "$profile.rating_count"]}, 2
+                        ]}
+                    }},
+                ]
             )
 
             return {"message": "Rating submitted successfully"}, 200

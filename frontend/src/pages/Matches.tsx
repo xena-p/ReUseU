@@ -11,6 +11,63 @@ interface User {
   };
 }
 
+const RateLoanCard: React.FC<{ item: Item; onRated: (id: string) => void }> = ({ item, onRated }) => {
+  const [hover, setHover] = useState(0);
+  const [selected, setSelected] = useState(0);
+  const [submitting, setSubmitting] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  const submit = async () => {
+    if (!selected) return;
+    setSubmitting(true);
+    setErr(null);
+    try {
+      await apiService.completeAndRate(item._id, selected);
+      onRated(item._id);
+    } catch (e: any) {
+      setErr(e?.response?.data?.error || 'Could not submit rating');
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="bg-white rounded-xl shadow p-5 border border-amber-200 flex items-center justify-between gap-4">
+      <div>
+        <h3 className="font-bold text-gray-800">{item.title}</h3>
+        <p className="text-sm text-gray-500">
+          Due {new Date(item.return_date).toLocaleDateString('en-US')} · How was the lender?
+        </p>
+        {err && <p className="text-sm text-red-600 mt-1">{err}</p>}
+      </div>
+      <div className="flex items-center gap-3">
+        <div className="flex" onMouseLeave={() => setHover(0)}>
+          {[1, 2, 3, 4, 5].map((n) => (
+            <button
+              key={n}
+              type="button"
+              aria-label={`${n} star${n > 1 ? 's' : ''}`}
+              onMouseEnter={() => setHover(n)}
+              onClick={() => setSelected(n)}
+              disabled={submitting}
+              className={`text-2xl px-0.5 ${n <= (hover || selected) ? 'text-yellow-400' : 'text-gray-300'}`}
+            >
+              ★
+            </button>
+          ))}
+        </div>
+        <button
+          type="button"
+          onClick={submit}
+          disabled={!selected || submitting}
+          className="px-4 py-2 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold disabled:opacity-40"
+        >
+          {submitting ? 'Saving…' : 'Submit'}
+        </button>
+      </div>
+    </div>
+  );
+};
+
 const Matches: React.FC = () => {
   const navigate = useNavigate();
   const [activeRequests, setActiveRequests] = useState<Item[]>([]);
@@ -18,6 +75,7 @@ const Matches: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [users, setUsers] = useState<{ [key: string]: User }>({});
+  const [needsRating, setNeedsRating] = useState<Item[]>([]);
 
   const userId = localStorage.getItem('user_id');
 
@@ -40,9 +98,10 @@ const Matches: React.FC = () => {
         setLoading(true);
         
         // Fetch both data types in parallel
-        const [requestsResponse, loanedResponse] = await Promise.all([
+        const [requestsResponse, loanedResponse, activityResponse] = await Promise.all([
           apiService.getActiveRequests(userId),
-          apiService.getMyLoanedItems(userId)
+          apiService.getMyLoanedItems(userId),
+          apiService.getUserActivity(userId),
         ]);
 
         // Extract items from responses
@@ -51,6 +110,7 @@ const Matches: React.FC = () => {
 
         setActiveRequests(requests);
         setLoanedItems(loaned);
+        setNeedsRating(activityResponse.needs_rating || []);
 
         // Collect all user IDs we need to fetch
         const userIds = new Set<string>();
@@ -281,6 +341,23 @@ const Matches: React.FC = () => {
             </h1>
             <p className="text-xl text-gray-600">Manage your requests and loans</p>
           </div>
+
+          {needsRating.length > 0 && (
+            <div className="bg-amber-50/80 rounded-2xl shadow-xl p-8 border border-amber-200 mb-8">
+              <h2 className="text-2xl font-bold text-amber-700 mb-6 pb-3 border-b border-amber-200">
+                Rate your loans ({needsRating.length})
+              </h2>
+              <div className="space-y-4">
+                {needsRating.map((item) => (
+                  <RateLoanCard
+                    key={item._id}
+                    item={item}
+                    onRated={(id) => setNeedsRating((prev) => prev.filter((i) => i._id !== id))}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
         
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Left side - My Requests (where user is requester) */}

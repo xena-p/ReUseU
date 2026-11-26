@@ -4,7 +4,8 @@ export interface UserProfile {
   school: 'TMU' | 'UofT' | 'Western' | 'York';
   degree: string;
   program: string;
-  '#ofratings': number;
+  rating_sum: number; 
+  rating_count: number;
   rating: number;
 }
 

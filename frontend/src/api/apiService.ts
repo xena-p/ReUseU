@@ -62,7 +62,7 @@ export const apiService = {
 
   getUserActivity: async (requesterId: string) => {
     // This returns the {active, needs_rating, history} object from your Python logic
-    const response = await api.get(`/users/${requesterId}/activity`);
+    const response = await api.get(`/items/activity/${requesterId}`);
     return response.data;
   },
 
@@ -72,7 +72,7 @@ export const apiService = {
   },
 
   completeAndRate: async (itemId: string, ratingValue: number) => {
-    const response = await api.post(`/items/${itemId}/complete`, { rating_value: ratingValue });
+    const response = await api.post(`/items/rate/${itemId}`, { rating: ratingValue });   
     return response.data;
   },
   // Matches page endpoints

@@ -91,7 +91,7 @@ const Profile = () => {
       formData.append('description', itemDescription);
       formData.append('category', itemCategory);
       formData.append('condition', itemCondition);
-      formData.append('return_date', itemReturnDate);
+      formData.append('return_date', new Date(itemReturnDate).toISOString());
       
       if (itemImage) {
         formData.append('images', itemImage);
