@@ -19,23 +19,18 @@ const Browse = () => {
       navigate('/');
       return;
     }
+    fetchItems('');
   }, [loggedInUserId, navigate]);
 
-  const handleSearch = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (!searchQuery.trim() || !loggedInUserId) {
-      return;
-    }
+  const fetchItems = async (query: string) => {
+    if (!loggedInUserId) return;
 
     setLoading(true);
     setError('');
 
     try {
       const response = await axiosInstance.get<ItemsResponse>('/search', {
-        params: {
-          user_id: loggedInUserId,
-          query: searchQuery.trim(),
-        },
+        params: { user_id: loggedInUserId, query: query.trim() },
       });
 
       if (response.data && response.data.items) {
@@ -59,6 +54,10 @@ const Browse = () => {
     } finally {
       setLoading(false);
     }
+  };
+  const handleSearch = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    fetchItems(searchQuery);
   };
 
   const handleLike = async (itemId: string) => {
@@ -241,7 +240,7 @@ const Browse = () => {
             ) : items.length === 0 ? (
               <div className="bg-white rounded-2xl shadow-lg p-12 border border-gray-200 text-center text-gray-500">
                 <p className="text-xl mb-2">No items found</p>
-                <p>Try searching for items using the search bar above.</p>
+                <p>{searchQuery.trim() ? `Nothing matches "${searchQuery.trim()}".` : 'No items listed at your school yet.'}</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

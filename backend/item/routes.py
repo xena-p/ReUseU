@@ -149,8 +149,7 @@ def get_items_for_search():
     if not user_id:
         return jsonify({"error": "User ID required"}), 401
 
-    if not user_input:
-        return jsonify({"error": "Object Name required"}), 400
+    user_input = (user_input or "").strip()
     
     
     items = Item.get_user_query(user_input,user_id)

@@ -1,3 +1,5 @@
+import re
+
 from bson.objectid import ObjectId
 from db import items_col, users_col
 from datetime import datetime, timezone
@@ -180,11 +182,12 @@ class Item:
         school = requester.get("profile", {}).get("school")
 
         query = {
-            "title": {"$regex": user_input, "$options": "i"},
             "status": "available",
             "user_id": {"$ne": ObjectId(user_id)},
             "school": school,
         }
+        if user_input:
+            query["title"] = {"$regex": re.escape(user_input), "$options": "i"}
         items = list(items_col.find(query))
 
         # ONE query for every owner instead of one per item
