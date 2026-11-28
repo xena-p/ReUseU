@@ -73,6 +73,7 @@ class User:
                 "rating": 0,
                 "rating_sum": 0,
                 "rating_count": 0,
+                "profile_pic": "",
             }
 
             
@@ -129,4 +130,63 @@ class User:
             print(f"Error getting user by id: {str(e)}")
             return None
 
-#need update profile
+    @staticmethod
+    def update_profile(user_id, username=None, degree=None, program=None, profile_pic=None):
+        updates = {}
+        if username is not None:
+            username = username.strip()
+            if not username:
+                return {"error": "Username cannot be empty"}, 400
+            # unique, but ignore the user's own record
+            if users_col.find_one({"username": username, "_id": {"$ne": ObjectId(user_id)}}):
+                return {"error": "Username already exists"}, 400
+            updates["username"] = username
+        if degree is not None:  updates["profile.degree"] = degree
+        if program is not None: updates["profile.program"] = program
+        if profile_pic:         updates["profile.profile_pic"] = profile_pic
+        if not updates:
+            return {"error": "Nothing to update"}, 400
+        res = users_col.update_one({"_id": ObjectId(user_id)}, {"$set": updates})
+        if res.matched_count == 0:
+            return {"error": "User not found"}, 404
+        return User.get_user_by_id(user_id), 200
+
+
+    @staticmethod
+    def change_password(user_id, current_password, new_password):
+        if not current_password or not new_password:
+            return {"error": "Current and new password required"}, 400
+        if len(new_password) < 3:
+            return {"error": "New password must be at least 8 characters"}, 400
+
+        try:
+            oid = ObjectId(user_id)
+        except Exception:
+            return {"error": "Invalid user id"}, 400
+
+        user = users_col.find_one({"_id": oid})
+        if not user:
+            return {"error": "User not found"}, 404
+
+        if not User.verify_password(current_password, user["password_hash"], user["salt"]):
+            return {"error": "Current password is incorrect"}, 401
+
+        new_hash, new_salt = User.hash_password(new_password)  # fresh salt
+        users_col.update_one(
+            {"_id": oid},
+            {"$set": {"password_hash": new_hash, "salt": new_salt}},
+        )
+        return {"message": "Password updated successfully"}, 200
+
+    @staticmethod
+    def delete_user(user_id):
+        try:
+            user = users_col.find_one({"_id": ObjectId(user_id)})
+            if not user:
+                return {"error": "User not found"}, 404
+
+            users_col.delete_one({"_id": ObjectId(user_id)})
+            return {"message": "User deleted successfuly"}, 200
+
+        except Exception as e:
+            return {"error": str(e)}, 500

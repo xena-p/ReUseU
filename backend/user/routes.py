@@ -1,6 +1,9 @@
 from flask import Blueprint, request, jsonify
 from db import users_col
 from user.models import User
+import os, uuid
+from werkzeug.utils import secure_filename
+from item.routes import UPLOAD_FOLDER, allowed_file
 
 from . import user_bp
 
@@ -41,3 +44,40 @@ def get_user(user_id):
     else:
         return jsonify({"error": "User not found"}), 404
 
+@user_bp.route("/user/<user_id>", methods=["PATCH"])
+def update_user(user_id):
+    pic_path = None
+    file = request.files.get("profile_pic")
+
+    if file and file.filename:
+        if not allowed_file(file.filename):
+            return jsonify({"error": "Invalid image type"}), 400
+        os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+        name = f"{uuid.uuid4().hex}_{secure_filename(file.filename)}"
+        file.save(os.path.join(UPLOAD_FOLDER, name))
+        pic_path = f"/uploads/{name}"
+    
+    result, status = User.update_profile(
+        user_id,
+        username=request.form.get("username"),
+        degree=request.form.get("degree"),
+        program=request.form.get("program"),
+        profile_pic=pic_path,
+    )
+    return jsonify(result), status
+
+
+@user_bp.route("/user/<user_id>/password", methods=["PATCH"])
+def change_password(user_id):
+    data = request.get_json(silent=True) or {}
+    result, status = User.change_password(
+        user_id, data.get("current_password"), data.get("new_password")
+    )
+    return jsonify(result), status
+
+
+
+@user_bp.route("/user/<user_id>", methods=["DELETE"])
+def delete_user(user_id):
+    response, status_code = User.delete_user(user_id)
+    return jsonify(response), status_code

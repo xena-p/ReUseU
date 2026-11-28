@@ -300,3 +300,20 @@ class Item:
             return {"message": "Rating submitted successfully"}, 200
         except Exception as e:
             return {"error": str(e)}, 500
+
+    @staticmethod
+    def delete_item(user, item_id):
+        try:
+            item = items_col.find_one({"_id": ObjectId(item_id)})
+            if not item:
+                return {"error": "Item not found"}, 404
+            
+            if user != item["user_id"]:
+                    return {"error": "Incorrect user"}, 403
+
+            items_col.delete_one({"_id": ObjectId(item_id)})
+            return {"message": "Item deleted successfuly"}, 200
+
+        except Exception as e:
+            return {"error": str(e)}, 500
+            

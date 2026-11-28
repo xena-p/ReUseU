@@ -7,6 +7,7 @@ export interface UserProfile {
   rating_sum: number; 
   rating_count: number;
   rating: number;
+  profile_pic?: string;
 }
 
 export interface PossibleDateSlot {

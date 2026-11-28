@@ -126,15 +126,19 @@ def get_items_for_browsing():
 @item_bp.route("/items/user/<user_id>", methods=["GET"])
 def get_user_items(user_id):
     try:
-        # 1. Fetch from database using the user_id filter
         query = {"user_id": ObjectId(user_id)}
         items = list(items_col.find(query).sort("created_at", -1))
-        
-        # 2. json_util.dumps handles BOTH the ObjectIds AND the Datetime objects
-        # This converts return_date to a string format automatically
-        sanitized_items = json.loads(json_util.dumps(items))
-        
-        return jsonify({"items": sanitized_items}), 200
+
+        for item in items:
+            item["_id"] = str(item["_id"])
+            item["user_id"] = str(item["user_id"])
+            if isinstance(item.get("requester"), ObjectId):
+                item["requester"] = str(item["requester"])
+            if isinstance(item.get("return_date"), datetime):
+                # stored as naive UTC; add "Z" so the browser reads it as UTC
+                item["return_date"] = item["return_date"].isoformat() + "Z"
+
+        return jsonify({"items": items}), 200
         
     except Exception as e:
         print(f"Error: {e}")
@@ -217,4 +221,11 @@ def rate_owner(item_id):
         return jsonify({"error": "Valid rating (1-5) required"}), 400
 
     response, status_code = Item.complete_and_rate_owner(item_id, rating)
+    return jsonify(response), status_code
+
+
+@item_bp.route("/items/<item_id>", methods=["DELETE"])
+def delete_item(item_id):
+    user = ObjectId(request.args.get("user_id"))
+    response, status_code = Item.delete_item(user, item_id)
     return jsonify(response), status_code
