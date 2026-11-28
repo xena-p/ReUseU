@@ -133,7 +133,7 @@ const Browse = () => {
   return (
     <div className="min-h-screen flex bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50">
       {/* Sidebar */}
-      <div className="w-64 bg-white shadow-lg flex flex-col">
+      <div className="sticky top-0 h-screen flex-shrink-0 w-64 bg-white shadow-lg flex flex-col">
         {/* Logo */}
         <div className="p-6 border-b border-gray-200">
           <div className="flex items-center gap-3">
@@ -271,11 +271,11 @@ const Browse = () => {
                       <img
                         src={imageUrl(item.images[0])!}
                         alt={item.title}
-                        className="w-full h-32 object-cover rounded-lg mb-4"
+                        className="w-full aspect-square object-cover rounded-lg mb-4"
                       />
                     ) : (
-                      <div className="w-16 h-16 bg-gradient-to-r from-teal-400 via-purple-400 to-pink-400 rounded-lg flex items-center justify-center mb-4 mx-auto">
-                        <span className="text-4xl">{getItemIcon(item.category)}</span>
+                      <div className="w-full aspect-square bg-gradient-to-r from-teal-400 via-purple-400 to-pink-400 rounded-lg flex items-center justify-center mb-4">
+                        <span className="text-6xl">{getItemIcon(item.category)}</span>
                       </div>
                     )}
 

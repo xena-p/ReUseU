@@ -282,7 +282,7 @@ const Matches: React.FC = () => {
   return (
     <div className="min-h-screen flex bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50">
       {/* Sidebar */}
-      <div className="w-64 bg-white shadow-lg flex flex-col">
+      <div className="sticky top-0 h-screen flex-shrink-0 w-64 bg-white shadow-lg flex flex-col">
         {/* Logo */}
         <div className="p-6 border-b border-gray-200">
           <div className="flex items-center gap-3">

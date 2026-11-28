@@ -4,6 +4,7 @@ import axiosInstance from '../api/axiosInstance';
 import { AxiosError } from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
 import { imageUrl } from '../api/images';
+import ImageCropper from '../components/ImageCropper';
 
 const Profile = () => {
   const { id } = useParams<{ id: string }>(); // This extracts the 'id' from the URL
@@ -45,8 +46,20 @@ const Profile = () => {
   const [itemCategory, setItemCategory] = useState('');
   const [itemCondition, setItemCondition] = useState<ItemCondition>('fair');
   const [itemReturnDate, setItemReturnDate] = useState('');
-  const [itemImage, setItemImage] = useState<File | null>(null);
+  const [itemImage, setItemImage] = useState<File | null>(null); // already cropped
+  const [itemImageToCrop, setItemImageToCrop] = useState<File | null>(null); // picked, waiting for crop
+  const [itemImagePreview, setItemImagePreview] = useState<string | null>(null);
   const [itemError, setItemError] = useState('');
+
+  useEffect(() => {
+    if (!itemImage) {
+      setItemImagePreview(null);
+      return;
+    }
+    const url = URL.createObjectURL(itemImage);
+    setItemImagePreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [itemImage]);
 
   const [deletingId, setDeletingId] = useState<string | null>(null);
   useEffect(() => {
@@ -328,7 +341,7 @@ const Profile = () => {
   return (
     <div className="min-h-screen flex bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50">
       {/* Sidebar */}
-      <div className="w-64 bg-white shadow-lg flex flex-col">
+      <div className="sticky top-0 h-screen flex-shrink-0 w-64 bg-white shadow-lg flex flex-col">
         {/* Logo */}
         <div className="p-6 border-b border-gray-200">
           <div className="flex items-center gap-3">
@@ -619,13 +632,58 @@ const Profile = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Image (Optional)</label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => setItemImage(e.target.files?.[0] || null)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  />
+                  {itemImagePreview ? (
+                    <div className="space-y-2">
+                      <img
+                        src={itemImagePreview}
+                        alt="Item preview"
+                        className="w-full aspect-square object-cover rounded-lg border border-gray-200"
+                      />
+                      <div className="flex gap-2">
+                        <label className="flex-1 cursor-pointer text-center px-3 py-2 text-sm text-purple-600 border border-purple-200 rounded-lg hover:bg-purple-50 transition-all">
+                          Change photo
+                          <input
+                            type="file"
+                            accept="image/png,image/jpeg,image/gif,image/webp"
+                            onChange={(e) => {
+                              setItemImageToCrop(e.target.files?.[0] || null);
+                              e.target.value = '';
+                            }}
+                            className="hidden"
+                          />
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => setItemImage(null)}
+                          className="flex-1 px-3 py-2 text-sm text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition-all"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <input
+                      type="file"
+                      accept="image/png,image/jpeg,image/gif,image/webp"
+                      onChange={(e) => {
+                        setItemImageToCrop(e.target.files?.[0] || null);
+                        e.target.value = '';
+                      }}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    />
+                  )}
                 </div>
+
+                {itemImageToCrop && (
+                  <ImageCropper
+                    file={itemImageToCrop}
+                    onCancel={() => setItemImageToCrop(null)}
+                    onConfirm={(cropped) => {
+                      setItemImage(cropped);
+                      setItemImageToCrop(null);
+                    }}
+                  />
+                )}
 
                 <button
                   type="submit"

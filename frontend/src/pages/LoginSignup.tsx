@@ -157,12 +157,103 @@ const LoginSignup = () => {
     updated[locationIndex].slots[slotIndex] = value;
     setPossibleDates(updated);
   };
+  const switchMode = (login: boolean) => {
+    setIsLogin(login);
+    setError('');
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-12">
-      <div className="max-w-md w-full space-y-8 bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border border-purple-100">
+    <div className="min-h-screen">
+      {/* Sticky header */}
+      <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-purple-100 shadow-sm">
+        <div className="max-w-7xl mx-auto px-6 lg:px-10 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white font-bold text-lg">
+              R
+            </div>
+            <span className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+              ReUseU
+            </span>
+          </div>
+          <nav className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => switchMode(true)}
+              className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-purple-700 rounded-lg transition-all"
+            >
+              Login
+            </button>
+            <button
+              type="button"
+              onClick={() => switchMode(false)}
+              className="px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg hover:from-purple-600 hover:to-pink-600 shadow-md transition-all"
+            >
+              Sign Up
+            </button>
+          </nav>
+        </div>
+      </header>
+
+      <main className="min-h-[calc(100vh-4rem)] max-w-7xl mx-auto px-6 lg:px-10 py-10 grid gap-12 lg:gap-20 lg:grid-cols-[1.2fr_1fr] items-center">
+        {/* Left: site description */}
+        <section className="order-2 lg:order-1 lg:sticky lg:top-28 space-y-8">
+          <div>
+            <h1 className="text-4xl lg:text-5xl xl:text-6xl font-bold text-gray-800 leading-tight">
+              Borrow what you need.{' '}
+              <span className="bg-gradient-to-r from-purple-600 via-pink-600 to-orange-500 bg-clip-text text-transparent">
+                Lend what you don't.
+              </span>
+            </h1>
+            <p className="mt-5 text-lg xl:text-xl text-gray-600 max-w-xl">
+              ReUseU is a lending marketplace for university students. Share textbooks,
+              electronics and everyday essentials with people on your own campus, so you
+              spend less and waste less.
+            </p>
+          </div>
+
+          <ul className="space-y-4">
+            <li className="flex gap-4">
+              <span className="flex-shrink-0 w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center text-xl">📚</span>
+              <div>
+                <p className="font-semibold text-gray-800">Post what you're not using</p>
+                <p className="text-sm text-gray-600">List an item with a photo, its condition and a return date.</p>
+              </div>
+            </li>
+            <li className="flex gap-4">
+              <span className="flex-shrink-0 w-10 h-10 rounded-full bg-pink-100 flex items-center justify-center text-xl">🤝</span>
+              <div>
+                <p className="font-semibold text-gray-800">Borrow from your campus</p>
+                <p className="text-sm text-gray-600">Browse items from students at your school and request what you need.</p>
+              </div>
+            </li>
+            <li className="flex gap-4">
+              <span className="flex-shrink-0 w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center text-xl">⭐</span>
+              <div>
+                <p className="font-semibold text-gray-800">Build trust with ratings</p>
+                <p className="text-sm text-gray-600">Rate lenders after each return so everyone knows who's reliable.</p>
+              </div>
+            </li>
+          </ul>
+
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">
+              Verified student emails only
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {['TMU', 'UofT', 'York', 'Western'].map((school) => (
+                <span key={school} className="px-3 py-1 text-sm font-medium text-purple-700 bg-white border border-purple-200 rounded-full">
+                  {school}
+                </span>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Right: login / signup card */}
+        <div className="order-1 lg:order-2 w-full max-w-sm xl:max-w-md mx-auto lg:mr-0 space-y-6 bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-6 border border-purple-100">
         {/* Header */}
         <div className="text-center">
-          <h2 className="text-4xl font-bold bg-gradient-to-r from-purple-600 via-pink-600 to-orange-500 bg-clip-text text-transparent">
+          <h2 className="text-3xl font-bold bg-gradient-to-r from-purple-600 via-pink-600 to-orange-500 bg-clip-text text-transparent">
             {isLogin ? 'Welcome Back!' : 'Join Us!'}
           </h2>
           <p className="mt-2 text-gray-600">
@@ -174,10 +265,7 @@ const LoginSignup = () => {
         <div className="flex gap-2 bg-gray-100 rounded-lg p-1">
           <button
             type="button"
-            onClick={() => {
-              setIsLogin(true);
-              setError('');
-            }}
+            onClick={() => switchMode(true)}
             className={`flex-1 py-2 px-4 rounded-md font-medium transition-all ${
               isLogin
                 ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-md'
@@ -188,10 +276,7 @@ const LoginSignup = () => {
           </button>
           <button
             type="button"
-            onClick={() => {
-              setIsLogin(false);
-              setError('');
-            }}
+            onClick={() => switchMode(false)}
             className={`flex-1 py-2 px-4 rounded-md font-medium transition-all ${
               !isLogin
                 ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-md'
@@ -211,7 +296,7 @@ const LoginSignup = () => {
 
         {/* Login Form */}
         {isLogin ? (
-          <form onSubmit={handleLogin} className="space-y-6">
+          <form onSubmit={handleLogin} className="space-y-4">
             <div>
               <label htmlFor="login-email" className="block text-sm font-medium text-gray-700 mb-1">
                 Email
@@ -222,7 +307,7 @@ const LoginSignup = () => {
                 required
                 value={loginEmail}
                 onChange={(e) => setLoginEmail(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
                 placeholder="your.email@university.ca"
               />
             </div>
@@ -237,7 +322,7 @@ const LoginSignup = () => {
                 required
                 value={loginPassword}
                 onChange={(e) => setLoginPassword(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
                 placeholder="Enter your password"
               />
             </div>
@@ -263,7 +348,7 @@ const LoginSignup = () => {
                 required
                 value={signupUsername}
                 onChange={(e) => setSignupUsername(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
                 placeholder="Choose a username"
               />
             </div>
@@ -278,7 +363,7 @@ const LoginSignup = () => {
                 required
                 value={signupEmail}
                 onChange={(e) => setSignupEmail(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
                 placeholder="your.email@university.ca"
               />
               <p className="mt-1 text-xs text-gray-500">
@@ -296,7 +381,7 @@ const LoginSignup = () => {
                 required
                 value={signupPassword}
                 onChange={(e) => setSignupPassword(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
                 placeholder="Create a password"
               />
             </div>
@@ -311,7 +396,7 @@ const LoginSignup = () => {
                 required
                 value={signupProgram}
                 onChange={(e) => setSignupProgram(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
                 placeholder="e.g., Computer Science"
               />
             </div>
@@ -326,7 +411,7 @@ const LoginSignup = () => {
                 required
                 value={signupDegree}
                 onChange={(e) => setSignupDegree(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
                 placeholder="e.g., Bachelor of Science"
               />
             </div>
@@ -410,7 +495,8 @@ const LoginSignup = () => {
             </button>
           </form>
         )}
-      </div>
+        </div>
+      </main>
     </div>
   );
 };

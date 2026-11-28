@@ -10,7 +10,7 @@ from item.routes import item_bp
 from flask import Blueprint
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, origins=["http://localhost:5173"])
 
 app.register_blueprint(user_bp)
 app.register_blueprint(item_bp)
